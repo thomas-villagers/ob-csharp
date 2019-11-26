@@ -31,9 +31,9 @@
 (require 'ob)
 
 (defvar org-babel-tangle-lang-exts)
-(add-to-list 'org-babel-tangle-lang-exts '("csharp" . "cs"))
+(add-to-list 'org-babel-tangle-lang-exts '("csharp" . "csx"))
 
-(defcustom org-babel-csharp-command "mono"
+(defcustom org-babel-csharp-command "dotnet-script"
   "Name of the csharp command.
 May be either a command in the path, like mono
 or an absolute path name, like /usr/local/bin/mono
@@ -42,27 +42,14 @@ parameters may be used, like mono -verbose"
   :version "24.3"
   :type 'string)
 
-(defcustom org-babel-csharp-compiler "gmcs"
-  "Name of the csharp compiler.
-May be either a command in the path, like mcs
-or an absolute path name, like /usr/local/bin/mcs
-parameters may be used, like mcs -warnaserror+"
-  :group 'org-babel
-  :version "24.3"
-  :type 'string) 
-
-
 (defun org-babel-execute:csharp (body params)
   (let* ((full-body (org-babel-expand-body:generic body params))
          (cmpflag (or (cdr (assoc :cmpflag params)) ""))
          (cmdline (or (cdr (assoc :cmdline params)) ""))
-         (src-file (org-babel-temp-file "csharp-src-" ".cs"))
-         (exe-file (concat (file-name-sans-extension src-file)  ".exe"))
-         (compile 
-          (progn (with-temp-file  src-file (insert full-body))
-                 (org-babel-eval 
-                  (concat org-babel-csharp-compiler " " cmpflag " "  src-file) ""))))
-    (let ((results (org-babel-eval (concat org-babel-csharp-command " " cmdline " " exe-file) "")))
+         (src-file (org-babel-temp-file "csharp-src-" ".csx"))
+         (exe-file (concat (file-name-sans-extension src-file)  ".csx")))
+         (with-temp-file  src-file (insert full-body))
+    (let ((results (org-babel-eval (concat org-babel-csharp-command " " exe-file) "")))
       (org-babel-reassemble-table
        (org-babel-result-cond (cdr (assoc :result-params params))
          (org-babel-read results)
